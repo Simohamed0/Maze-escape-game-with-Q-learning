@@ -39,15 +39,19 @@ class GameWindow:
         # Calculate the direction the agent is about to move
         dx, dy = next_x - x, next_y - y
 
-        # Calculate the angle of rotation based on the direction of movement
-        angle_radians = math.atan2(dy, dx)
-        angle_degrees = math.degrees(angle_radians)
+        # Calculate the angle of rotation based on the direction of movement but switching roght and left
+        if dx == 1 and dy == 0:
+            angle = 180
+        elif dx == -1 and dy == 0:
+            angle = 0
+        elif dx == 0 and dy == 1:
+            angle = 90
+        else:
+            angle = 270       
 
-        # Convert the angle to the range [0, 360] degrees
-        angle_degrees %= 360
 
         # Rotate the agent image to the calculated angle
-        rotated_agent_image = pygame.transform.rotate(self.agent_image, angle_degrees)
+        rotated_agent_image = pygame.transform.rotate(self.agent_image, angle)
 
         # Draw the rotated agent image on the game window at the current position
         self.screen.blit(rotated_agent_image, (x * self.cell_size, y * self.cell_size))
