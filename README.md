@@ -21,7 +21,7 @@ Escape the maze with the help of a Q-learning agent! This is a Python project th
 
 <!-- Introduction -->
 ## Introduction
-Introduce your project briefly and provide a link to your live demo or hosted application (if applicable). Use emojis to make it fun! 😄
+
 
 <!-- Features -->
 ## Features
