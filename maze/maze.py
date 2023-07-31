@@ -17,7 +17,51 @@ class Maze:
         self.agent_position = self.start
         self.agent_path = [self.agent_position]
         self.difficulty = 1
-        self.generate_random_maze()  # Optionally, you can generate random mazes here.
+        self.generate_random_maze2()  # Optionally, you can generate random mazes here.
+
+    def generate_random_maze2(self):
+        visited = np.full((self.width, self.height), False)
+        walls = []
+        
+        def add_walls(x, y):
+            if x > 0 and not visited[x - 1, y]:
+                walls.append((x - 1, y))
+            if x < self.width - 1 and not visited[x + 1, y]:
+                walls.append((x + 1, y))
+            if y > 0 and not visited[x, y - 1]:
+                walls.append((x, y - 1))
+            if y < self.height - 1 and not visited[x, y + 1]:
+                walls.append((x, y + 1))
+        
+        def mark_visited(x, y):
+            visited[x, y] = True
+            add_walls(x, y)
+        
+        start_x, start_y = self.start
+        mark_visited(start_x, start_y)
+        
+        while walls:
+            x, y = walls.pop(random.randint(0, len(walls) - 1))
+            
+            neighbors = []
+            if x > 0 and visited[x - 1, y]:
+                neighbors.append((x - 1, y))
+            if x < self.width - 1 and visited[x + 1, y]:
+                neighbors.append((x + 1, y))
+            if y > 0 and visited[x, y - 1]:
+                neighbors.append((x, y - 1))
+            if y < self.height - 1 and visited[x, y + 1]:
+                neighbors.append((x, y + 1))
+            
+            if len(neighbors) == 1:
+                self.matrix[x, y] = MAZE_PATH
+                mark_visited(x, y)
+        
+        # Set start and exit positions
+        self.matrix[start_x, start_y] = MAZE_PATH
+        exit_x, exit_y = self.exit
+        self.matrix[exit_x, exit_y] = MAZE_PATH
+
 
     def generate_random_maze(self):
         def get_neighbors(cell):
