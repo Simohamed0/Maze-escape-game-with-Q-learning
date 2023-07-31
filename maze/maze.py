@@ -51,7 +51,7 @@ class Maze:
 
 
     def is_wall(self, x, y):
-        return self.maze[x, y] == 1
+        return self.matrix[x, y] == 1
 
     def is_exit(self, x, y):
         return (x, y) == self.exit

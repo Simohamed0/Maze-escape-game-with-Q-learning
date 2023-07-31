@@ -6,3 +6,5 @@ if __name__ == "__main__":
     
     maze = Maze(c.MAZE_WIDTH, c.MAZE_HEIGHT)
     print(maze.matrix)
+    game_window = GameWindow(maze)
+    game_window.game_loop()
