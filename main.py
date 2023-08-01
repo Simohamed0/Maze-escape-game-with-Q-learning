@@ -5,13 +5,18 @@ import constants as c
 
 generator_algorithm = ["prim", "randomDFS"]
 
-# argument parser
+# argument parser for command line arguments and what algorithm to use
 def parser():
-    pass
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--algorithm", help="choose which algorithm to use to generate maze", choices=generator_algorithm, default="prim")
+    args = parser.parse_args()
+    return args.algorithm
 
 if __name__ == "__main__":
-    
-    maze = Maze(c.MAZE_WIDTH, c.MAZE_HEIGHT)
+
+    algorithm = parser()
+    maze = Maze(width=c.MAZE_WIDTH, height= c.MAZE_HEIGHT, generator_algorithm=algorithm)
     print(maze.matrix)
     game_window = GameWindow(maze)
     game_window.game_loop()
