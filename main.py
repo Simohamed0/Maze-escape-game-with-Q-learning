@@ -1,6 +1,8 @@
 from gui.game_interface import GameWindow
 from maze.maze import Maze
 import constants as c
+from agent.dumb_agent import DumbAgent
+from agent.Q_agent import QAgent
 
 
 generator_algorithm = ["prim", "randomDFS"]
@@ -18,5 +20,7 @@ if __name__ == "__main__":
     algorithm = parser()
     maze = Maze(width=c.MAZE_WIDTH, height= c.MAZE_HEIGHT, generator_algorithm=algorithm)
     print(maze.matrix)
-    game_window = GameWindow(maze)
+    Q_agent = QAgent(maze)
+    dumb_agent = DumbAgent(maze)
+    game_window = GameWindow(maze, Q_agent)
     game_window.game_loop()

@@ -35,8 +35,11 @@ class Maze:
     def is_within_maze(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height
 
-    def update_agent_position(self, x, y):
-        # Update the agent's position in the maze
-        pass
-
-    # Other utility methods for interacting with the maze can be added here
+    def get_reward(self, x, y):
+        # Check if the agent reached the exit position
+        if (x, y) == self.exit:
+            return 1.0  # Positive reward for reaching the exit
+        # Check if the agent hit a wall or went out of bounds
+        if self.is_wall(x, y) or not self.is_within_maze(x, y):
+            return -10.0  # Large negative reward for hitting a wall or going out of bounds
+        return -0.1  # Small negative reward for each step the agent takes

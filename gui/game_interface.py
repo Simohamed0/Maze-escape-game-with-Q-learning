@@ -1,10 +1,10 @@
 import pygame
 from pygame.locals import QUIT
 from agent.dumb_agent import DumbAgent
-import math
+from agent.Q_agent import QAgent
 
 class GameWindow:
-    def __init__(self, maze):
+    def __init__(self, maze, agent):
         self.maze = maze
         self.cell_size = 30
         self.width = maze.width * self.cell_size
@@ -22,6 +22,7 @@ class GameWindow:
         # Load the image for the agent and resize it to the cell size
         self.agent_image = pygame.image.load("assets/arrow.png")  # Replace "agent.png" with the actual path to your agent's image
         self.agent_image = pygame.transform.scale(self.agent_image, (self.cell_size, self.cell_size))
+        self.agent = agent
 
 
     def draw_maze(self):
@@ -56,45 +57,37 @@ class GameWindow:
         # Draw the rotated agent image on the game window at the current position
         self.screen.blit(rotated_agent_image, (x * self.cell_size, y * self.cell_size))
 
-    def update_display(self, agent_position, next_agent_position):
+    def update_display(self):
         self.screen.fill((255, 255, 255))
         self.draw_maze()
-        self.draw_agent(agent_position[0], agent_position[1], next_agent_position[0], next_agent_position[1])
+    
+        # Get the agent's current and next positions
+        agent_x, agent_y = self.agent.get_position()
+        next_agent_x, next_agent_y = self.agent.get_next_position()  
+        # Draw the agent at its current and next positions
+        self.draw_agent(agent_x, agent_y, next_agent_x, next_agent_y)
         pygame.display.update()
         self.clock.tick(60)
 
+
     def game_loop(self):
         pygame.init()
-        agent = DumbAgent(self.maze)
-        x, y = self.maze.start
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
                     return
-
-            action = agent.get_action(x, y)
-            next_x, next_y = x, y
-
-            if action == 0:  # Up
-                next_x -= 1
-            elif action == 1:  # Down
-                next_x += 1
-            elif action == 2:  # Left
-                next_y -= 1
-            else:  # Right
-                next_y += 1
-
-            self.update_display((x, y), (next_x, next_y))
-            if self.maze.is_within_maze(next_x, next_y) and not self.maze.is_wall(next_x, next_y):
-                x, y = next_x, next_y
-
-            if self.maze.is_exit(x, y):
+                
+            if self.maze.is_exit(*self.agent.get_position()):
                 print("You escaped!")
                 pygame.quit()
                 return
             
+            # Move the agent in the maze 
+            self.agent.move()
+            self.update_display()
+
+
+            
             # Add a delay of 500 milliseconds (0.5 seconds) between each movement
-            pygame.time.delay(1000)
-
-
+            pygame.time.delay(200)

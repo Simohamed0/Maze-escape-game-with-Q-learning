@@ -9,33 +9,41 @@ class QAgent:
         self.maze = maze
         self.q_table = {}  # Initialize an empty Q-table
 
-    def move(self):
+    def get_next_position(self):
+        # Get the agent's next position without actually updating the agent's position
         x, y = self.agent_position
-        current_state = (x, y)
-
-        # Get the next action using Q-learning
-        self.action = self.get_action(x, y)
-
-        # Perform the action and update the agent's position
         if self.action == 0:  # Up
-            self.agent_position = (x - 1, y)
+            x -= 1
         elif self.action == 1:  # Down
-            self.agent_position = (x + 1, y)
+            x += 1
         elif self.action == 2:  # Left
-            self.agent_position = (x, y - 1)
+            y -= 1
         elif self.action == 3:  # Right
-            self.agent_position = (x, y + 1)
+            y += 1
 
-        # Update the agent's path
+        # Check if the next position is within the maze boundaries
+        if self.maze.is_within_maze(x, y):
+            return x, y
+        else:
+            # If the next position is out of bounds, return the current position
+            return self.agent_position
+
+
+    def move(self):
+        current_state = self.agent_position
+        self.action = self.get_action(*current_state)
+        next_position = self.get_next_position()
+
+        # Check if the next position is not a wall
+        if not self.maze.is_wall(*next_position):
+            self.agent_position = next_position
+
+        new_state = self.agent_position
+        self.update_q_value(current_state, new_state)
         self.agent_path.append(self.agent_position)
 
-        # Get the new state after the move
-        new_state = self.agent_position
 
-        # Update the Q-value for the current state-action pair using the Q-learning update formula
-        self.update_q_value(current_state, new_state)
-
-        return self.agent_position
+        
 
     def get_action(self, x, y):
         # Get all possible actions (directions) the agent can take
@@ -90,3 +98,8 @@ class QAgent:
 
     def get_path(self):
         return self.agent_path
+    
+    def get_q_table(self):
+        return self.q_table
+    
+    # 
