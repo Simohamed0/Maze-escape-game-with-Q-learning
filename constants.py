@@ -1,8 +1,8 @@
 # constants for the maze game
 
 # Maze constants
-MAZE_WIDTH = 10
-MAZE_HEIGHT = 10
+MAZE_WIDTH = 40
+MAZE_HEIGHT = 30
 MAZE_WALL = 1
 MAZE_PATH = 0
 MAZE_START = 2

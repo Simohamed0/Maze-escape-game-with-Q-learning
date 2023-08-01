@@ -29,6 +29,7 @@ List the key features of your project:
 - Random maze generation
 - Q-learning agent implementation
 - Maze visualization with Pygame
+
 - ...
 
 <!-- Installation -->

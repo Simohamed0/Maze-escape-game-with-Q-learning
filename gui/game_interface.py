@@ -20,7 +20,7 @@ class GameWindow:
             "agent": (0, 0, 255)
         }
         # Load the image for the agent and resize it to the cell size
-        self.agent_image = pygame.image.load("/home/youssef/Téléchargements/arrow.png")  # Replace "agent.png" with the actual path to your agent's image
+        self.agent_image = pygame.image.load("assets/arrow.png")  # Replace "agent.png" with the actual path to your agent's image
         self.agent_image = pygame.transform.scale(self.agent_image, (self.cell_size, self.cell_size))
 
 

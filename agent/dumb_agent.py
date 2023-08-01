@@ -10,11 +10,6 @@ class DumbAgent:
         self.action = 0
         self.maze = maze
 
-
-    def move(self):
-        # Move the agent randomly
-        pass
-
     def get_action(self, x, y):
         # Get the agent's next action
         return self.action
