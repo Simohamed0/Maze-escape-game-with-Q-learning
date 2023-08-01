@@ -1,7 +1,7 @@
 import random
 
 # class for a dumb agent that just moves randomly
-class DumbAgent:
+class Agent:
 
     def __init__(self, maze):
 
@@ -19,6 +19,26 @@ class DumbAgent:
     
     def get_path(self):
         return self.agent_path
+    
+    def get_next_position(self):
+        # Get the agent's next position without actually updating the agent's position
+        x, y = self.agent_position
+        if self.action == 0:  # Up
+            x -= 1
+        elif self.action == 1:  # Down
+            x += 1
+        elif self.action == 2:  # Left
+            y -= 1
+        elif self.action == 3:  # Right
+            y += 1
+
+        # Check if the next position is within the maze boundaries
+        if self.maze.is_within_maze(x, y):
+            return x, y
+        else:
+            # If the next position is out of bounds, return the current position
+            return self.agent_position
+
 
     def get_action(self, x, y):
         # Get all possible actions (directions) the agent can take

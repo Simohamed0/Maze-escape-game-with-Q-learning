@@ -1,7 +1,7 @@
 from gui.game_interface import GameWindow
 from maze.maze import Maze
 import constants as c
-from agent.dumb_agent import DumbAgent
+from agent.agent import Agent
 from agent.Q_agent import QAgent
 
 
@@ -21,6 +21,5 @@ if __name__ == "__main__":
     maze = Maze(width=c.MAZE_WIDTH, height= c.MAZE_HEIGHT, generator_algorithm=algorithm)
     print(maze.matrix)
     Q_agent = QAgent(maze)
-    dumb_agent = DumbAgent(maze)
     game_window = GameWindow(maze, Q_agent)
     game_window.game_loop()

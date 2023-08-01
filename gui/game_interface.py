@@ -1,7 +1,5 @@
 import pygame
 from pygame.locals import QUIT
-from agent.dumb_agent import DumbAgent
-from agent.Q_agent import QAgent
 
 class GameWindow:
     def __init__(self, maze, agent):
@@ -85,9 +83,10 @@ class GameWindow:
             
             # Move the agent in the maze 
             self.agent.move()
+            self.agent.display_q_table()
             self.update_display()
 
 
             
             # Add a delay of 500 milliseconds (0.5 seconds) between each movement
-            pygame.time.delay(200)
+            pygame.time.delay(3)

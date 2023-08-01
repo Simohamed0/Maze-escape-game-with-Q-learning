@@ -15,8 +15,8 @@ class Maze:
         self.width = width
         self.height = height
         self.matrix = np.full((width, height), MAZE_WALL, dtype=int)
-        self.start = 0,1
-        self.exit = width - 1, height - 2
+        self.start = 0,0
+        self.exit = width - 1, height - 1
         self.agent_position = self.start
         self.agent_path = [self.agent_position]
         self.difficulty = 1

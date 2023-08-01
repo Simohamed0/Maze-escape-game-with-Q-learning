@@ -1,32 +1,22 @@
 import random
+import numpy as np
+from agent.agent import Agent
 
-class QAgent:
+    
+alpha = 0.1  # Learning rate, controls the impact of new information on Q-values
+gamma = 0.3  # Discount factor, balances immediate and future rewards
+exploration = 0.1  # Exploration rate, controls how often the agent explores instead of exploiting
+
+
+
+
+class QAgent(Agent):
 
     def __init__(self, maze):
-        self.agent_position = maze.start
-        self.agent_path = [self.agent_position]
-        self.action = 0
-        self.maze = maze
-        self.q_table = {}  # Initialize an empty Q-table
+        super().__init__(maze)
+        # initialize the Q-table 
+        self.q_table = {}
 
-    def get_next_position(self):
-        # Get the agent's next position without actually updating the agent's position
-        x, y = self.agent_position
-        if self.action == 0:  # Up
-            x -= 1
-        elif self.action == 1:  # Down
-            x += 1
-        elif self.action == 2:  # Left
-            y -= 1
-        elif self.action == 3:  # Right
-            y += 1
-
-        # Check if the next position is within the maze boundaries
-        if self.maze.is_within_maze(x, y):
-            return x, y
-        else:
-            # If the next position is out of bounds, return the current position
-            return self.agent_position
 
 
     def move(self):
@@ -42,9 +32,6 @@ class QAgent:
         self.update_q_value(current_state, new_state)
         self.agent_path.append(self.agent_position)
 
-
-        
-
     def get_action(self, x, y):
         # Get all possible actions (directions) the agent can take
         possible_actions = []
@@ -58,11 +45,12 @@ class QAgent:
             possible_actions.append(3)  # Right
 
         # Randomly choose one of the available actions based on epsilon-greedy policy
-        epsilon = 0.2  # Exploration rate, controls how often the agent explores instead of exploiting
-        if random.uniform(0, 1) < epsilon:
+        if random.uniform(0, 1) < exploration:
             return random.choice(possible_actions)
         else:
             return self.get_best_action(x, y)
+
+
 
     def get_best_action(self, x, y):
         # Get the action with the highest Q-value for the current state (exploitation)
@@ -74,9 +62,6 @@ class QAgent:
         return max(possible_actions, key=lambda a: self.q_table[state][a])
 
     def update_q_value(self, current_state, new_state):
-        # Q-learning update formula
-        alpha = 0.5  # Learning rate, controls the impact of new information on Q-values
-        gamma = 0.9  # Discount factor, balances immediate and future rewards
 
         # Get the Q-value for the current state-action pair
         current_q = self.q_table.get(current_state, {}).get(self.action, 0)
@@ -92,14 +77,31 @@ class QAgent:
         if current_state not in self.q_table:
             self.q_table[current_state] = {}
         self.q_table[current_state][self.action] = updated_q
-
-    def get_position(self):
-        return self.agent_position
-
-    def get_path(self):
-        return self.agent_path
     
     def get_q_table(self):
         return self.q_table
+    
+    def display_q_table(self):
+        # Display the Q-table as a 2D grid
+        for x in range(self.maze.width):
+            for y in range(self.maze.height):
+                print("{:6.2f}".format(self.q_table.get((x, y), {}).get(0, 0)), end=" ")
+            print()
+        print()
+        for x in range(self.maze.width):
+            for y in range(self.maze.height):
+                print("{:6.2f}".format(self.q_table.get((x, y), {}).get(2, 0)), end=" ")
+            print()
+        print()
+        for x in range(self.maze.width):
+            for y in range(self.maze.height):
+                print("{:6.2f}".format(self.q_table.get((x, y), {}).get(1, 0)), end=" ")
+            print()
+        print()
+        for x in range(self.maze.width):
+            for y in range(self.maze.height):
+                print("{:6.2f}".format(self.q_table.get((x, y), {}).get(3, 0)), end=" ")
+            print()
+        print("--------------------------------------------------")
     
     # 
