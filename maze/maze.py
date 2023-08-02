@@ -38,7 +38,7 @@ class Maze:
     def get_reward(self, x, y):
         # Check if the agent reached the exit position
         if (x, y) == self.exit:
-            return 1.0  # Positive reward for reaching the exit
+            return 100.0  # Positive reward for reaching the exit
         # Check if the agent hit a wall or went out of bounds
         if self.is_wall(x, y) or not self.is_within_maze(x, y):
             return -10.0  # Large negative reward for hitting a wall or going out of bounds

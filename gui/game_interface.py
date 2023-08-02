@@ -1,8 +1,10 @@
 import pygame
 from pygame.locals import QUIT
+import time
 
 class GameWindow:
     def __init__(self, maze, agent):
+        pygame.init()
         self.maze = maze
         self.cell_size = 30
         self.width = maze.width * self.cell_size
@@ -68,8 +70,9 @@ class GameWindow:
         self.clock.tick(60)
 
 
-    def game_loop(self):
-        pygame.init()
+    def game_loop(self, delta):
+
+        start_time = time.time()
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -78,15 +81,21 @@ class GameWindow:
                 
             if self.maze.is_exit(*self.agent.get_position()):
                 print("You escaped!")
+                end_time = time.time()
+                elapsed_time = end_time - start_time
+                print("Time taken for the simulation:", elapsed_time)
                 pygame.quit()
                 return
             
             # Move the agent in the maze 
             self.agent.move()
-            self.agent.display_q_table()
+            # self.agent.display_q_table()
             self.update_display()
 
 
             
             # Add a delay of 500 milliseconds (0.5 seconds) between each movement
-            pygame.time.delay(3)
+            pygame.time.delay(delta)
+
+            # Process the event queue
+            # pygame.event.pump()
