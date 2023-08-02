@@ -6,7 +6,7 @@ from agent.Q_agent import QAgent
 import pygame
 
 
-generator_algorithm = ["prim", "randomDFS"]
+generator_algorithm = ["prim", "eller", "hunt-and-kill"]
 
 # argument parser for command line arguments and what algorithm to use
 def parser():
@@ -24,21 +24,39 @@ if __name__ == "__main__":
     Q_agent = QAgent(maze)
     game_window = GameWindow(maze, Q_agent)
     # lancer 3 gameloops en mesurant le temps d'execution de chaque gameloop et afficher les resultats
-    tables = []
-    game_window.game_loop(1)
-    for i in range(3):
-        game_window.game_loop(10000)
+    lenghts = []
+    for i in range(200):
+        # initialiser la position de l'agent à la position de départ
+        Q_agent.agent_position = maze.start
+        game_window.game_loop(1)
         print("Agent path length: ", len(Q_agent.agent_path))
-        tables.append(Q_agent.q_table)
+        lenghts.append(len(Q_agent.agent_path))
+        print("episode ", i+1,"take", len(Q_agent.agent_path), "steps")
+        
+    pygame.quit()
+    # plot time list of agent in a big figure
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(20,20))
+    plt.plot(Q_agent.time_list)
+    plt.xlabel("episode")
+    plt.ylabel("time")
+    plt.title("time taken for each episode")
+    plt.show()
 
-        # Process events before starting the next game loop
-        pygame.event.pump()
-        pygame.event.clear()
+    for i in range(len(lenghts)):
+        if i > 0:
+            lenghts[i] -= lenghts[i-1]
+    
 
-    # tester l'égalité des elements de la liste tables
-    print(tables[0] == tables[1])   
-    print(tables[1] == tables[2])
-    print(tables[0] == tables[2])
+    # plot lenghts list of agent in a big figure
+    plt.figure(figsize=(20,20))
+    plt.plot(lenghts)
+    plt.xlabel("episode")
+    plt.ylabel("length")
+    plt.title("length of path taken for each episode")
+    plt.show()
+
+
     
     # Q_agent.agent_path = []
     # game_window.game_loop()

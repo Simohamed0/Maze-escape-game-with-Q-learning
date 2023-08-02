@@ -16,6 +16,7 @@ class QAgent(Agent):
         super().__init__(maze)
         # initialize the Q-table 
         self.q_table = {}
+        self.time_list = []
 
 
 

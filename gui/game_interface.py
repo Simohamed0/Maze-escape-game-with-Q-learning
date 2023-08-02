@@ -4,7 +4,6 @@ import time
 
 class GameWindow:
     def __init__(self, maze, agent):
-        pygame.init()
         self.maze = maze
         self.cell_size = 30
         self.width = maze.width * self.cell_size
@@ -20,7 +19,7 @@ class GameWindow:
             "agent": (0, 0, 255)
         }
         # Load the image for the agent and resize it to the cell size
-        self.agent_image = pygame.image.load("assets/arrow.png")  # Replace "agent.png" with the actual path to your agent's image
+        self.agent_image = pygame.image.load("assets/arrow.png")  
         self.agent_image = pygame.transform.scale(self.agent_image, (self.cell_size, self.cell_size))
         self.agent = agent
 
@@ -71,7 +70,7 @@ class GameWindow:
 
 
     def game_loop(self, delta):
-
+        pygame.init()
         start_time = time.time()
         while True:
             for event in pygame.event.get():
@@ -84,7 +83,8 @@ class GameWindow:
                 end_time = time.time()
                 elapsed_time = end_time - start_time
                 print("Time taken for the simulation:", elapsed_time)
-                pygame.quit()
+                self.agent.time_list.append(elapsed_time)
+                # pygame.quit()
                 return
             
             # Move the agent in the maze 
