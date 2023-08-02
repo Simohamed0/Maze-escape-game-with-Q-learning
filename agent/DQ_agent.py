@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 from collections import deque
 from agent.agent import Agent
 import os
@@ -23,7 +24,7 @@ class DQAgent(Agent):
                  epsilon=0, epsilon_decay=0.995, epsilon_min=0.01, batch_size=32, memory_size=1000, tau=0.1):
         
         super().__init__(maze)
-        self.state_size = 0
+        self.state_size = maze.width * maze.height + 5
         self.action_size = action_size
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
@@ -33,6 +34,7 @@ class DQAgent(Agent):
         self.batch_size = batch_size
         self.tau = tau
         self.memory = deque(maxlen=memory_size)
+        self.model_weights_path = 'model_weights.h5'
 
         # Build the Deep Q-Network
         self.model = self._build_model()
@@ -41,25 +43,17 @@ class DQAgent(Agent):
 
     
 
-    def reset_position(self):
-        self.position = self.maze.starting_position
+    def reset(self):
+        self.position = self.maze.start
 
     def _build_model(self):
+        
+        # the input is the state size
         model = Sequential()
-
-        # Add input layer with state_size neurons and use ReLU activation
-        model.add(Dense(32, input_dim=self.state_size, activation='relu'))
-
-        # Add hidden layers
+        model.add(Dense(64, input_dim=self.state_size, activation='relu'))
         model.add(Dense(64, activation='relu'))
-        model.add(Dense(32, activation='relu'))
-
-        # Add output layer with action_size neurons (one for each action)
         model.add(Dense(self.action_size, activation='linear'))
-
-        # Compile the model using Mean Squared Error as the loss function and Adam optimizer
-        model.compile(loss='mean_squared_error', optimizer='adam')
-
+        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
         return model
 
     # remember(state, action, reward, next_state, done) function
@@ -89,10 +83,14 @@ class DQAgent(Agent):
         return state
 
 
-    def act(self):
+    def act(self,state):
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
-        return np.argmax(self.model.predict(self.state)[0])
+        # reshape the state to (1, state_size)
+        state = np.reshape(state, [1, self.state_size])
+        q_values = self.model.predict(state)
+        return np.argmax(q_values[0])
+    
 
     def step(self, action):
         # Perform the given action in the environment (maze)
@@ -107,10 +105,13 @@ class DQAgent(Agent):
         elif action == RIGHT:
             next_position = (self.position[0], self.position[1] + 1)
         
-
+        reward = 0
         # Check if the next position is within the maze boundaries
-        if self.is_valid_position(next_position):
-            self.position = next_position
+        if next_position[0] >= 0 and next_position[0] < self.maze.height and next_position[1] >= 0 and next_position[1] < self.maze.width:
+            if self.maze.matrix[next_position[0]][next_position[1]] == 0:
+                self.position = next_position
+            else:
+                reward = -1
 
         # Get the state representation at the new position
         next_state = self.get_state(self.maze.matrix, self.maze.exit)
@@ -120,30 +121,36 @@ class DQAgent(Agent):
 
         # Assign a reward based on the agent's new position
         if done:
-            reward = 0
-        elif self.maze.matrix[self.position] == 1:
-            reward = -100
-            done = True
-        else:
-            reward = -1
+            reward = 50
             
         return next_state, reward, done
 
     def replay(self):
         # Check if the replay buffer has enough experiences to sample a batch
         if len(self.memory) < self.batch_size:
-            return
-
+            return    
 
         # Sample a batch of experiences from the replay buffer
-        minibatch = np.array(random.sample(self.memory, self.batch_size))
+        minibatch = random.sample(self.memory, self.batch_size)
 
-        # Extract the individual components of the experiences
-        states = np.vstack(minibatch[:, 0])
-        actions = np.array(minibatch[:, 1], dtype=int)
-        rewards = np.array(minibatch[:, 2])
-        next_states = np.vstack(minibatch[:, 3])
-        dones = np.array(minibatch[:, 4], dtype=bool)
+        # Convert the elements of minibatch into separate lists
+        states, actions, rewards, next_states, dones = [], [], [], [], []
+        for experience in minibatch:
+            state, action, reward, next_state, done = experience
+            states.append(np.array(state))
+            actions.append(np.array(action))
+            rewards.append(reward)
+            next_states.append(np.array(next_state))
+            dones.append(done)
+
+        # Convert the lists to NumPy arrays
+        states = np.array(states)
+        actions = np.array(actions)
+        rewards = np.array(rewards)
+        next_states = np.array(next_states)
+        dones = np.array(dones)
+
+        print("states shape: {}".format(states.shape))
 
         # Calculate the target Q-values using the target network
         target_q_values = self.model.predict(states)
@@ -154,17 +161,16 @@ class DQAgent(Agent):
         targets = rewards + (1 - dones) * self.discount_factor * max_next_q_values
 
         # Update the Q-values for the chosen actions
-        for idx, action in enumerate(actions):
-            target_q_values[idx][action] = targets[idx]
+        target_q_values[np.arange(self.batch_size), actions] = targets
 
         # Train the DQN with the current batch of experiences
         loss = self.model.train_on_batch(states, target_q_values)
 
-        # Optionally, you can log the loss or other metrics for monitoring the training process
-        print("Loss: {}".format(loss))
+        # Optionally, you can log and plot the loss 
+        print("loss: {}".format(loss))
 
-        # Soft update the target network by updating its weights with the current model's weights
-        self._soft_update_target_network()
+
+
 
     def _soft_update_target_network(self):
         model_weights = self.model.get_weights()
@@ -176,4 +182,7 @@ class DQAgent(Agent):
     def update_epsilon(self):
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
+
+    def load(self):
+        self.model.load_weights(self.model_weights_path)
 

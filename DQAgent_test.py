@@ -4,17 +4,19 @@ import numpy as np
 from agent.DQ_agent import DQAgent
 
 
-def train_agent(agent, num_episodes=1000, max_steps_per_episode=1000):
+def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
+    
     for episode in range(1, num_episodes + 1):
+        
+        # Reset the environment at the beginning of the episode
+        agent.reset()
         state = agent.get_state(agent.maze.matrix, agent.maze.exit)
         agent.state_size = len(state)
         total_reward = 0
-
-
         
         for step in range(max_steps_per_episode):
             # Take an action using the DQAgent's epsilon-greedy policy
-            action = agent.act()
+            action = agent.act(state)
 
             # Perform the action in the environment
             next_state, reward, done = agent.step(action)
@@ -30,20 +32,29 @@ def train_agent(agent, num_episodes=1000, max_steps_per_episode=1000):
             # Accumulate the reward for this episode
             total_reward += reward
 
+            print(f"Step {step + 1}/{max_steps_per_episode}, Total Reward: {total_reward}")
             if done:
                 break
 
-
+        
+       
         # Perform experience replay to update the DQNetwork
         agent.replay()
 
         # Optionally, you can update the target network at some frequency
-        if episode % agent.update_target_frequency == 0:
-            agent.update_target_network()
+        if episode % 5 == 0:
+            agent._soft_update_target_network()
 
         # Optionally, you can print the rewards per episode to monitor the training progress
         print(f"Episode {episode}/{num_episodes}, Total Reward: {total_reward}")
 
+    
+    
+    # Save the DQNetwork in model_weights.h5
+    agent.model.save_weights("model_weights.h5")
+
+
+# test 
 
 if __name__ == "__main__":
 
@@ -52,24 +63,14 @@ if __name__ == "__main__":
 
     # Create the DQAgent
     dqn_agent = DQAgent(maze, action_size=4,
-                        learning_rate=0.001, discount_factor=0.99, epsilon=1.0, epsilon_decay=0.995,
+                        learning_rate=0.001, discount_factor=0.99, epsilon=0.1, epsilon_decay=0.995,
                         epsilon_min=0.01, batch_size=32, memory_size=1000)
+
+
+    train_agent(dqn_agent, num_episodes=10, max_steps_per_episode=100)
+
+    # use the saved model and gui to test the agent
     
-    for i in range(100):
-        state = dqn_agent.get_state(maze.matrix, maze.exit)
-        a = dqn_agent.act()
-        print(a)
-        print("before", dqn_agent.position)
-        dqn_agent.step(a)
-        print("after", dqn_agent.position)
-        next_state = dqn_agent.get_state(maze.matrix, maze.exit)
-        print(np.array_equal(state, next_state))
 
-        dqn_agent.remember(state, a, 0, next_state, False)
 
-    # let's see what's inside memory
-    for i in range(5):
-        print(dqn_agent.memory[0][i])
-
-    # debug the replay function
-    dqn_agent.replay()
+    
