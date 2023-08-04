@@ -1,13 +1,14 @@
 # constants for the maze game
 
 # Maze constants
-MAZE_WIDTH = 13
-MAZE_HEIGHT = 13
+MAZE_WIDTH = 8
+MAZE_HEIGHT = 8
 MAZE_WALL = 1
 MAZE_PATH = 0
 MAZE_START = 2
 MAZE_EXIT = 3
 MAZE_AGENT = 4
+MAZE_TELEPORT = 6 
 
 # Agent constants
 AGENT_DUMB = 0

@@ -8,6 +8,7 @@ MAZE_WALL = 1
 MAZE_PATH = 0
 MAZE_START = 3
 MAZE_EXIT = 4
+MAZE_TELEPORT = 6 
 
 
 
@@ -21,7 +22,12 @@ class Maze:
         self.agent_position = self.start
         self.agent_path = [self.agent_position]
         self.difficulty = 1
-        
+        self.flags = []  # List to store flag positions
+        self.flags_collected = []  # List to keep track of collected flags
+        self.visited_states = set()  # Set to keep track of visited states
+        self.teleport_points = []  # List to store teleportation points
+
+
         # switch between different maze generation algorithms
         if generator_algorithm == "prim":
             generate_random_maze_prim(self)
@@ -35,7 +41,33 @@ class Maze:
         else:
             raise ValueError("Invalid generator_algorithm. Supported algorithms: 'prim', 'eller'")
 
+            # Generate random flag positions
+        self.generate_flags()
+        self.generate_teleport_points()
 
+
+    def generate_flags(self):
+        # Here, we generate 3 flags, but you can change the number as needed.
+        num_flags = 3
+        available_positions = [(x, y) for x in range(self.width) for y in range(self.height) if self.matrix[x, y] == MAZE_PATH]
+        self.flags = random.sample(available_positions, num_flags)
+
+    def generate_teleport_points(self):
+        num_teleport = 2
+        available_positions = [(x, y) for x in range(self.width) for y in range(self.height) if self.matrix[x, y] == MAZE_PATH]
+        self.teleport_points = random.sample(available_positions, num_teleport)
+
+        # Place the teleportation destination for each teleportation point
+        for i, teleport_point in enumerate(self.teleport_points):
+            destination = self.teleport_points[1 - i]  # The destination will be the other teleportation point
+            self.matrix[teleport_point[0], teleport_point[1]] = MAZE_TELEPORT
+            self.matrix[destination[0], destination[1]] = MAZE_TELEPORT
+
+    def is_teleport(self, x, y):
+        # Check if the position is a teleportation point
+        if self.matrix[x, y] == MAZE_TELEPORT:
+            return x, y
+        return None
     
     def is_wall(self, x, y):
         return self.matrix[x, y] == 1
@@ -47,56 +79,51 @@ class Maze:
         return 0 <= x < self.width and 0 <= y < self.height
 
     def get_reward(self, x, y):
-        # Check if the agent reached the exit position
-        if (x, y) == self.exit:
-            return 100.0  # Positive reward for reaching the exit
         # Check if the agent hit a wall or went out of bounds
         if self.is_wall(x, y) or not self.is_within_maze(x, y):
-            return -10.0  # Large negative reward for hitting a wall or going out of bounds
-        return -0.1  # Small negative reward for each step the agent takes
+            return -20.0  # Large negative reward for hitting a wall or going out of bounds
 
-    def get_neighbors(self, x, y):
-        neighbors = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
-        return [(nx, ny) for nx, ny in neighbors if self.is_within_maze(nx, ny)]
+        # Check if the agent revisits a state
+        current_state = (x, y)
+        if current_state in self.visited_states:
+            return -5.0  # Penalize revisiting states to encourage exploration
 
-    def generate_random_maze_hunt_and_kill(self):
-        # Step 1: Choose a random starting location
-        start_x, start_y = random.randint(0, self.width - 1), random.randint(0, self.height - 1)
-        self.matrix[start_x, start_y] = MAZE_PATH
+        # Mark the current state as visited
+        self.visited_states.add(current_state)
 
-        # Helper function to check if a cell has an unvisited neighbor
-        def has_unvisited_neighbor(x, y):
-            return any(self.matrix[nx, ny] == MAZE_PATH for nx, ny in self.get_neighbors(x, y))
+        # Check if the agent reached a flag
+        if current_state in self.flags and current_state not in self.flags_collected:
+            return 1.0
 
-        # Helper function to get a random visited neighbor
-        def get_random_visited_neighbor(x, y):
-            visited_neighbors = [(nx, ny) for nx, ny in self.get_neighbors(x, y) if self.matrix[nx, ny] == MAZE_PATH]
-            return random.choice(visited_neighbors) if visited_neighbors else None
+        # Check if the agent reached the exit position with all flags collected
+        if current_state == self.exit and len(self.flags_collected) == len(self.flags):
+            return 10.0  # Positive reward for reaching the exit with all flags collected
 
-        # Step 2: Perform a random walk until the current cell has no unvisited neighbors
-        current_x, current_y = start_x, start_y
-        while has_unvisited_neighbor(current_x, current_y):
-            current_x, current_y = random.choice(self.get_neighbors(current_x, current_y))
-            self.matrix[current_x, current_y] = MAZE_PATH
+        # Check if the agent reached the exit position without all flags collected
+        if current_state == self.exit and len(self.flags_collected) < len(self.flags):
+            return -10.0 * (len(self.flags) - len(self.flags_collected))  # Large negative reward for reaching the exit without all flags collected
 
-        # Step 3 and 4: Enter "hunt" mode and repeat steps 2 and 3 until the entire grid is scanned
-        while not np.all(self.matrix == MAZE_PATH):
-            # Find a random unvisited cell adjacent to a visited cell
-            x, y = None, None
-            for i in range(self.width):
-                for j in range(self.height):
-                    if self.matrix[i, j] == MAZE_WALL and has_unvisited_neighbor(i, j):
-                        x, y = i, j
-                        break
-                if x is not None and y is not None:
-                    break
+        # Calculate the Manhattan distance to the nearest unvisited flag (D_flags)
+        D_flags = float('inf')
+        for flag in self.flags:
+            if flag not in self.flags_collected:
+                D = abs(flag[0] - x) + abs(flag[1] - y)
+                D_flags = min(D_flags, D)
 
-            if x is None or y is None:
-                # If no unvisited cell with visited neighbors is found, the maze is complete
-                break
+        # Calculate the Manhattan distance to the exit (D_exit)
+        D_exit = abs(self.exit[0] - x) + abs(self.exit[1] - y)
 
-            # Perform a random walk starting from the chosen unvisited cell
-            while has_unvisited_neighbor(x, y):
-                x, y = random.choice(self.get_neighbors(x, y))
-                self.matrix[x, y] = MAZE_PATH
+        # Apply a time penalty to encourage the agent to find shorter paths
+        time_penalty = -0.1
 
+        # Define the reward based on the distances to flags and the exit
+        reward = 0.5 * (1.0 / D_flags) + 0.5 * (1.0 / D_exit) + time_penalty
+
+        # Apply teleportation reward adjustments
+        teleport_reward = 0.0
+        teleport_destination = self.is_teleport(x, y)
+        if teleport_destination:
+            # Provide a small positive reward for using teleportation
+            teleport_reward = 0.1
+
+        return reward + teleport_reward

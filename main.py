@@ -3,6 +3,7 @@ from maze.maze import Maze
 import constants as c
 from agent.agent import Agent
 from agent.Q_agent import QAgent
+from agent.DoubleQAgent import DoubleQAgent
 import pygame
 
 
@@ -21,23 +22,25 @@ if __name__ == "__main__":
     algorithm = parser()
     maze = Maze(width=c.MAZE_WIDTH, height= c.MAZE_HEIGHT, generator_algorithm=algorithm)
     print(maze.matrix)
-    Q_agent = QAgent(maze)
-    game_window = GameWindow(maze, Q_agent)
+    agent = DoubleQAgent(maze)
+    game_window = GameWindow(maze, agent)
     # lancer 3 gameloops en mesurant le temps d'execution de chaque gameloop et afficher les resultats
     lenghts = []
-    for i in range(200):
+    for i in range(100):
         # initialiser la position de l'agent à la position de départ
-        Q_agent.agent_position = maze.start
+        agent.agent_position = maze.start
         game_window.game_loop(1)
-        print("Agent path length: ", len(Q_agent.agent_path))
-        lenghts.append(len(Q_agent.agent_path))
-        print("episode ", i+1,"take", len(Q_agent.agent_path), "steps")
+        print("Agent path length: ", len(agent.agent_path))
+        lenghts.append(len(agent.agent_path))
+        print("episode ", i+1,"take", len(agent.agent_path), "steps")
         
     pygame.quit()
+    # remove the first element of the list
+    agent.time_list.pop(0)
     # plot time list of agent in a big figure
     import matplotlib.pyplot as plt
     plt.figure(figsize=(20,20))
-    plt.plot(Q_agent.time_list)
+    plt.plot(agent.time_list)
     plt.xlabel("episode")
     plt.ylabel("time")
     plt.title("time taken for each episode")

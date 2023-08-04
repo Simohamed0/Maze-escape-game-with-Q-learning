@@ -3,8 +3,8 @@ import numpy as np
 from agent.agent import Agent
 
     
-alpha = 0.1  # Learning rate, controls the impact of new information on Q-values
-gamma = 0.3  # Discount factor, balances immediate and future rewards
+alpha = 0.5  # Learning rate, controls the impact of new information on Q-values
+gamma = 0.5  # Discount factor, balances immediate and future rewards
 exploration = 0.1  # Exploration rate, controls how often the agent explores instead of exploiting
 
 
@@ -18,7 +18,8 @@ class QAgent(Agent):
         self.q_table = {}
         self.time_list = []
 
-
+    def set_position(self, x, y):
+        self.agent_position = x, y
 
     def move(self):
         current_state = self.agent_position
