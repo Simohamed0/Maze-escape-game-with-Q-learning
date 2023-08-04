@@ -42,16 +42,9 @@ python main.py
 
 
 
-<!-- Authors -->
-## Authors
-
-This project was developed by:
-
-- Mohamed FAID ([GitHub](https://github.com/Simohamed0))
-- Youssef FAID ([GitHub](https://github.com/FaidYoussef))
-
 
 <!-- what does the agent learn by time? -->
+## How does the agent learn by time ?
 
 As the agent interacts with the environment and moves through the maze, it learns to improve its behavior and navigation strategy through the Q-learning algorithm. The Q-learning algorithm allows the agent to learn by updating its Q-table based on the rewards it receives after taking specific actions in different states.
 
@@ -72,3 +65,12 @@ Here's how the agent learns over time:
 It's important to note that the learning process is influenced by the learning rate (alpha) and the discount factor (gamma). The learning rate determines how much the agent should value new information over past experiences, while the discount factor balances the importance of immediate rewards versus future rewards.
 
 The learning process is not always deterministic, and the agent might need to explore and learn from various paths to discover the optimal strategy. Over time, with enough training iterations, the agent should become proficient in navigating the maze and finding the shortest path to the goal.
+
+
+## Authors
+
+This project was developed by:
+
+- Mohamed FAID ([GitHub](https://github.com/Simohamed0))
+- Youssef FAID ([GitHub](https://github.com/FaidYoussef))
+
