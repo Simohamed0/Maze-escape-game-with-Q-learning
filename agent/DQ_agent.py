@@ -3,6 +3,7 @@ import random
 import matplotlib.pyplot as plt
 from collections import deque
 from agent.agent import Agent
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # '2' means to only display error messages
 
@@ -34,7 +35,6 @@ class DQAgent(Agent):
         self.batch_size = batch_size
         self.tau = tau
         self.memory = deque(maxlen=memory_size)
-        self.model_weights_path = 'model_weights.h5'
 
         # Build the Deep Q-Network
         self.model = self._build_model()
@@ -89,7 +89,9 @@ class DQAgent(Agent):
         # reshape the state to (1, state_size)
         state = np.reshape(state, [1, self.state_size])
         q_values = self.model.predict(state)
-        return np.argmax(q_values[0])
+        action = np.argmax(q_values[0])
+        print("action not random: {}".format(action))
+        return action
     
 
     def step(self, action):
@@ -183,6 +185,6 @@ class DQAgent(Agent):
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
-    def load(self):
-        self.model.load_weights(self.model_weights_path)
-
+    def load_saved_model(self, path):
+        self.model.load_weights(path)
+        self.target_model.load_weights(path)

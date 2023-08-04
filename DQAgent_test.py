@@ -2,10 +2,14 @@ from maze.maze import Maze
 import constants as c
 import numpy as np
 from agent.DQ_agent import DQAgent
+from maze.maze import Maze
+from gui.game_interface import GameWindow
 
 
 def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
     
+
+    total_rewards = []
     for episode in range(1, num_episodes + 1):
         
         # Reset the environment at the beginning of the episode
@@ -15,12 +19,12 @@ def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
         total_reward = 0
         
         for step in range(max_steps_per_episode):
+            
             # Take an action using the DQAgent's epsilon-greedy policy
             action = agent.act(state)
 
             # Perform the action in the environment
-            next_state, reward, done = agent.step(action)
-
+            next_state, reward, done = agent.step(action)            
 
             # Store the experience in the replay buffer
             agent.remember(state, action, reward, next_state, done)
@@ -36,7 +40,7 @@ def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
             if done:
                 break
 
-        
+        total_rewards.append(total_reward)
        
         # Perform experience replay to update the DQNetwork
         agent.replay()
@@ -48,13 +52,23 @@ def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
         # Optionally, you can print the rewards per episode to monitor the training progress
         print(f"Episode {episode}/{num_episodes}, Total Reward: {total_reward}")
 
+        # Decay the epsilon after each episode
+        agent.epsilon = max(agent.epsilon_min, agent.epsilon_decay * agent.epsilon)
+
+    # Plot total rewards after training
+    import matplotlib.pyplot as plt
+    plt.plot(range(1, num_episodes + 1), total_rewards)
+    plt.xlabel("Episode")
+    plt.ylabel("Total Reward")
+    plt.title("Total Reward per Episode")
+    plt.show()
     
     
     # Save the DQNetwork in model_weights.h5
     agent.model.save_weights("model_weights.h5")
 
 
-# test 
+# test the agent using the saved model and gui
 
 if __name__ == "__main__":
 
@@ -67,10 +81,17 @@ if __name__ == "__main__":
                         epsilon_min=0.01, batch_size=32, memory_size=1000)
 
 
-    train_agent(dqn_agent, num_episodes=10, max_steps_per_episode=100)
+    train_agent(dqn_agent, num_episodes=8, max_steps_per_episode=100)
 
-    # use the saved model and gui to test the agent
-    
+    # load the saved model
+    dqn_agent.model.load_weights("model_weights.h5")
+
+    # print the model 
+    dqn_agent.model.summary()
+
+
+
+
 
 
     
