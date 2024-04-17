@@ -14,10 +14,7 @@ Escape the maze with the help of a Q-learning agent! This is a Python project th
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [How it Works](#how-it-works)
-- [Demo](#demo)
-- [Contributing](#contributing)
-- [Authors](#authors)
+
 
 <!-- Introduction -->
 ## Introduction
