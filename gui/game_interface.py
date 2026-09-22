@@ -1,6 +1,5 @@
 import pygame
 from pygame.locals import QUIT
-import time
 
 class GameWindow:
     def __init__(self, maze, agent):
@@ -93,61 +92,19 @@ class GameWindow:
         self.clock.tick(60)
 
 
-    def game_loop(self, delta):
+    def game_loop(self, max_steps=1000, delay=10):
         pygame.init()
-        start_time = time.time()
-        while True:
+        for _ in range(max_steps):
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
                     return
                 
-            if self.maze.is_exit(*self.agent.get_position()) and len(self.maze.flags_collected) == len(self.maze.flags):
-                print("You escaped!")
-                end_time = time.time()
-                elapsed_time = end_time - start_time
-                print("Time taken for the simulation:", elapsed_time)
-                self.agent.time_list.append(elapsed_time)
-                # pygame.quit()
-                # Reset the flags_collected list to make all flags uncollected again
-                self.maze.flags_collected = []
-                # Reset the visited_states set to allow revisiting states in the next game
-                self.maze.visited_states.clear()
-                # Reset the agent's position to the start position
-                self.agent.set_position(*self.maze.start)
-                return
-            
-            teleport_position = self.maze.is_teleport(*self.agent.get_position())
-
-            if teleport_position:
-                destination = self.get_teleport_destination(teleport_position)
-                self.agent.set_position(*destination)  # Set the agent's position to the destination
-
-            # Move the agent in the maze 
-            self.agent.move()
-            # self.agent.display_q_table()
-            self.check_flags()
-
+            done = self.agent.move()
             self.update_display()
-
-            # Add a delay of 500 milliseconds (0.5 seconds) between each movement
-            pygame.time.delay(delta)
-
-    def check_flags(self):
-        # Check if the agent has landed on a flag position
-        agent_pos = self.agent.get_position()
-        for flag in self.maze.flags:
-            if agent_pos == flag and flag not in self.maze.flags_collected:
-                self.maze.flags_collected.append(flag)
-
-
-
-    def get_teleport_destination(self, teleport_position):
-        # Get the destination of the teleportation point
-        for i, teleport_point in enumerate(self.maze.teleport_points):
-            if teleport_position == teleport_point:
-                destination = self.maze.teleport_points[1 - i]
-                return destination
+            pygame.time.delay(delay)
+            if done:
+                return True
+        return False
 
             
-

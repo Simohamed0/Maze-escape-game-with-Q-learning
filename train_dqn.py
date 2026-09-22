@@ -1,9 +1,7 @@
-from maze.maze import Maze
 import constants as c
 import numpy as np
 from agent.DQ_agent import DQAgent
 from maze.maze import Maze
-from gui.game_interface import GameWindow
 
 
 def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
@@ -36,7 +34,6 @@ def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
             # Accumulate the reward for this episode
             total_reward += reward
 
-            print(f"Step {step + 1}/{max_steps_per_episode}, Total Reward: {total_reward}")
             if done:
                 break
 
@@ -50,7 +47,7 @@ def train_agent(agent, num_episodes=1000, max_steps_per_episode=100):
             agent._soft_update_target_network()
 
         # Optionally, you can print the rewards per episode to monitor the training progress
-        print(f"Episode {episode}/{num_episodes}, Total Reward: {total_reward}")
+        print(f"Episode {episode}/{num_episodes}: reward={total_reward:.2f}")
 
         # Decay the epsilon after each episode
         agent.epsilon = max(agent.epsilon_min, agent.epsilon_decay * agent.epsilon)
@@ -81,7 +78,7 @@ if __name__ == "__main__":
                         epsilon_min=0.01, batch_size=32, memory_size=1000)
 
 
-    train_agent(dqn_agent, num_episodes=8, max_steps_per_episode=100)
+    train_agent(dqn_agent, num_episodes=100, max_steps_per_episode=500)
 
     # load the saved model
     dqn_agent.model.load_weights("model_weights.h5")
