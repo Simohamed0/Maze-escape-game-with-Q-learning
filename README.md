@@ -1,40 +1,36 @@
-<!-- Project Title -->
-# Maze Escape Game with Q-Learning
+# Maze Escape with Double Q-Learning
 
-<!-- Project Description -->
-Escape the maze with the help of a Q-learning agent! This is a Python project that implements Q-learning to solve mazes. The agent explores the maze and learns to find the optimal path from the starting point to the exit.
+A reproducible reinforcement-learning demo in which an agent collects every flag and exits a randomly generated maze. The default agent uses Double Q-learning; a standard tabular Q-learning baseline and an optional DQN implementation are included.
 
-<!-- Badges (Optional) -->
-[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
+![Maze demonstration](docs/maze-demo.png)
 
-<!-- Table of Contents -->
-## Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
+## Setup
 
+Requires Python 3.10 or newer.
 
-<!-- Introduction -->
-## Introduction
-
-
-<!-- Features -->
-## Features
-List the key features of your project:
-- Random maze generation
-- Q-learning agent implementation
-- Maze visualization with Pygame
-
-- ...
-
-<!-- Installation -->
-## Installation
-Provide instructions on how to install and set up your project. You can include code blocks to show commands.
 ```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+python main.py --episodes 100 --seed 42
 ```
 
+Add `--render` to visualize the learned policy and `--plot` to display episode lengths. Select a generator with `--algorithm prim`, `eller`, or `hunt-and-kill`; view all options with `python main.py --help`.
 
+## Formulation
+
+The state contains the agent position and collected-flag set. The four actions move up, down, left, or right. Rewards encourage flag collection and successful exit while penalizing steps, revisits, and invalid moves. Episodes terminate after escape or the configured `--max-steps` limit.
+
+Double Q-learning maintains two value tables. Each update selects the maximizing action with one table and evaluates it with the other, reducing maximization bias.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests
+```
+
+For the optional DQN experiment, install `requirements-dqn.txt` and run `python train_dqn.py`.
+
+## License
+
+MIT

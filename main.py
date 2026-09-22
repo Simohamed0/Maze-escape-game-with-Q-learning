@@ -1,70 +1,70 @@
-from gui.game_interface import GameWindow
-from maze.maze import Maze
+import argparse
+import random
+
+import numpy as np
+
 import constants as c
-from agent.agent import Agent
-from agent.Q_agent import QAgent
 from agent.DoubleQAgent import DoubleQAgent
-import pygame
+from maze.maze import Maze
 
 
-generator_algorithm = ["prim", "eller", "hunt-and-kill"]
+def parse_args():
+    parser = argparse.ArgumentParser(description="Train a Double Q-learning maze agent")
+    parser.add_argument("-a", "--algorithm", choices=("prim", "eller", "hunt-and-kill"), default="prim")
+    parser.add_argument("--episodes", type=int, default=100)
+    parser.add_argument("--max-steps", type=int, default=1000)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--render", action="store_true")
+    parser.add_argument("--plot", action="store_true")
+    return parser.parse_args()
 
-# argument parser for command line arguments and what algorithm to use
-def parser():
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--algorithm", help="choose which algorithm to use to generate maze", choices=generator_algorithm, default="prim")
-    args = parser.parse_args()
-    return args.algorithm
+
+def train(agent, episodes, max_steps):
+    lengths, solved = [], []
+    for _ in range(episodes):
+        agent.reset()
+        success = False
+        for _ in range(max_steps):
+            if agent.move():
+                success = True
+                break
+        lengths.append(len(agent.agent_path) - 1)
+        solved.append(success)
+    return lengths, solved
+
+
+def main():
+    args = parse_args()
+    if args.episodes < 1 or args.max_steps < 1:
+        raise ValueError("episodes and max-steps must be positive")
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    maze = Maze(c.MAZE_WIDTH, c.MAZE_HEIGHT, args.algorithm)
+    agent = DoubleQAgent(maze)
+    lengths, solved = train(agent, args.episodes, args.max_steps)
+    print(f"Solved {sum(solved)}/{args.episodes} episodes")
+    if any(solved):
+        successful_lengths = [length for length, success in zip(lengths, solved) if success]
+        print(f"Mean successful path length: {np.mean(successful_lengths):.1f}")
+
+    if args.render:
+        from gui.game_interface import GameWindow
+        import pygame
+
+        agent.epsilon = 0.0
+        agent.reset()
+        GameWindow(maze, agent).game_loop(args.max_steps)
+        pygame.quit()
+
+    if args.plot:
+        import matplotlib.pyplot as plt
+
+        plt.plot(lengths)
+        plt.xlabel("Episode")
+        plt.ylabel("Steps")
+        plt.title("Training episode length")
+        plt.show()
+
 
 if __name__ == "__main__":
-
-    algorithm = parser()
-    maze = Maze(width=c.MAZE_WIDTH, height= c.MAZE_HEIGHT, generator_algorithm=algorithm)
-    print(maze.matrix)
-    agent = DoubleQAgent(maze)
-    game_window = GameWindow(maze, agent)
-    # lancer 3 gameloops en mesurant le temps d'execution de chaque gameloop et afficher les resultats
-    lenghts = []
-    for i in range(100):
-        # initialiser la position de l'agent à la position de départ
-        agent.agent_position = maze.start
-        game_window.game_loop(1)
-        print("Agent path length: ", len(agent.agent_path))
-        lenghts.append(len(agent.agent_path))
-        print("episode ", i+1,"take", len(agent.agent_path), "steps")
-        
-    pygame.quit()
-    # remove the first element of the list
-    agent.time_list.pop(0)
-    # plot time list of agent in a big figure
-    import matplotlib.pyplot as plt
-    plt.figure(figsize=(20,20))
-    plt.plot(agent.time_list)
-    plt.xlabel("episode")
-    plt.ylabel("time")
-    plt.title("time taken for each episode")
-    plt.show()
-
-    for i in range(len(lenghts)):
-        if i > 0:
-            lenghts[i] -= lenghts[i-1]
-    
-
-    # plot lenghts list of agent in a big figure
-    plt.figure(figsize=(20,20))
-    plt.plot(lenghts)
-    plt.xlabel("episode")
-    plt.ylabel("length")
-    plt.title("length of path taken for each episode")
-    plt.show()
-
-
-    
-    # Q_agent.agent_path = []
-    # game_window.game_loop()
-    # print("Agent path length: ", len(Q_agent.agent_path))
-    # print agent path
-    # print("Agent path: ", Q_agent.agent_path)
-    
-
+    main()

@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 from collections import deque
 from agent.agent import Agent
 
@@ -22,10 +21,10 @@ RIGHT = 3
 
 class DQAgent(Agent):
     def __init__(self, maze, action_size=4, learning_rate=0.001, discount_factor=0.99,
-                 epsilon=0, epsilon_decay=0.995, epsilon_min=0.01, batch_size=32, memory_size=1000, tau=0.1):
+                 epsilon=1.0, epsilon_decay=0.995, epsilon_min=0.01, batch_size=32, memory_size=1000, tau=0.1):
         
         super().__init__(maze)
-        self.state_size = maze.width * maze.height + 5
+        self.state_size = maze.width * maze.height + 2 + len(maze.flags)
         self.action_size = action_size
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
@@ -44,16 +43,16 @@ class DQAgent(Agent):
     
 
     def reset(self):
-        self.position = self.maze.start
+        super().reset()
 
     def _build_model(self):
         
         # the input is the state size
         model = Sequential()
-        model.add(Dense(64, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(64, input_shape=(self.state_size,), activation='relu'))
         model.add(Dense(64, activation='relu'))
         model.add(Dense(self.action_size, activation='linear'))
-        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+        model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
         return model
 
     # remember(state, action, reward, next_state, done) function
@@ -63,24 +62,9 @@ class DQAgent(Agent):
         
 
     
-    def get_state(self,maze_matrix, goal_position):
-        state = []
-
-        # Add agent's x and y coordinates to the state
-        state.extend(self.position)
-
-        # Flatten the maze matrix and add it to the state
-        for row in maze_matrix:
-            state.extend(row)
-
-        # Add goal's x and y coordinates to the state
-        state.extend(goal_position)
-
-        # Calculate and add the Manhattan distance from the agent to the goal
-        distance_to_goal = abs(self.position[0] - goal_position[0]) + abs(self.position[1] - goal_position[1])
-        state.append(distance_to_goal)
-
-        return state
+    def get_state(self, maze_matrix=None, goal_position=None):
+        flags = [float(flag in self.maze.flags_collected) for flag in self.maze.flags]
+        return np.concatenate((np.asarray(self.agent_position, dtype=float), self.maze.matrix.flatten(), flags))
 
 
     def act(self,state):
@@ -88,43 +72,16 @@ class DQAgent(Agent):
             return random.randrange(self.action_size)
         # reshape the state to (1, state_size)
         state = np.reshape(state, [1, self.state_size])
-        q_values = self.model.predict(state)
+        q_values = self.model.predict(state, verbose=0)
         action = np.argmax(q_values[0])
         print("action not random: {}".format(action))
         return action
     
 
     def step(self, action):
-        # Perform the given action in the environment (maze)
-
-        # Update the agent's position based on the chosen action
-        if action == UP:
-            next_position = (self.position[0] - 1, self.position[1])
-        elif action == DOWN:
-            next_position = (self.position[0] + 1, self.position[1])
-        elif action == LEFT:
-            next_position = (self.position[0], self.position[1] - 1)
-        elif action == RIGHT:
-            next_position = (self.position[0], self.position[1] + 1)
-        
-        reward = 0
-        # Check if the next position is within the maze boundaries
-        if next_position[0] >= 0 and next_position[0] < self.maze.height and next_position[1] >= 0 and next_position[1] < self.maze.width:
-            if self.maze.matrix[next_position[0]][next_position[1]] == 0:
-                self.position = next_position
-            else:
-                reward = -1
-
-        # Get the state representation at the new position
-        next_state = self.get_state(self.maze.matrix, self.maze.exit)
-
-        # Check if the agent has reached the goal position
-        done = self.position == self.maze.exit
-
-        # Assign a reward based on the agent's new position
-        if done:
-            reward = 50
-            
+        self.agent_position, reward, done = self.maze.step(self.agent_position, action)
+        self.agent_path.append(self.agent_position)
+        next_state = self.get_state()
         return next_state, reward, done
 
     def replay(self):
@@ -155,8 +112,8 @@ class DQAgent(Agent):
         print("states shape: {}".format(states.shape))
 
         # Calculate the target Q-values using the target network
-        target_q_values = self.model.predict(states)
-        next_q_values_target = self.target_model.predict(next_states)
+        target_q_values = self.model.predict(states, verbose=0)
+        next_q_values_target = self.target_model.predict(next_states, verbose=0)
         max_next_q_values = np.max(next_q_values_target, axis=1)
 
         # Calculate the target Q-values based on the Bellman equation
